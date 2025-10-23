@@ -11,6 +11,10 @@ import java.util.Optional;
 import org.springframework.stereotype.Service;
 
 import com.boardcamp.api.dtos.RentalsDTO;
+import com.boardcamp.api.exceptions.CustomersIdConflictException;
+import com.boardcamp.api.exceptions.GamesIdConflictException;
+import com.boardcamp.api.exceptions.RentalsIdConflictException;
+import com.boardcamp.api.exceptions.ReturnDateConflictException;
 import com.boardcamp.api.models.CustomersModel;
 import com.boardcamp.api.models.GamesModel;
 import com.boardcamp.api.models.RentalsModel;
@@ -39,30 +43,28 @@ public class RentalsService {
         return rentalsRepository.findById(id);
     }
 
-    public Optional<RentalsModel> postRentals(RentalsDTO body) {
-        Optional<GamesModel> game = gamesRepository.findById(body.getGameId());
-        Optional<CustomersModel> customer = customersRepository.findById(body.getCustomerId());
+    public RentalsModel postRentals(RentalsDTO body) {
+        GamesModel game = gamesRepository
+            .findById(body.getGameId())
+            .orElseThrow(() -> new GamesIdConflictException("Game ID does not exist."));
+        CustomersModel customer = customersRepository
+            .findById(body.getCustomerId())
+            .orElseThrow(() -> new CustomersIdConflictException("Customer ID does not exist."));
 
-        if(!game.isPresent() || !customer.isPresent()) {
-            return Optional.empty();
-        }
-
-        RentalsModel rental = new RentalsModel(body, game.get(), customer.get());
-        rentalsRepository.save(rental);
-        return Optional.of(rental); 
+        RentalsModel rental = new RentalsModel(body, game, customer);
+        return rentalsRepository.save(rental);
     }
 
-public Optional<RentalsModel> updateRentals(Long id) {
-    Optional<RentalsModel> rentalOpt = rentalsRepository.findById(id);
+public RentalsModel updateRentals(Long id) {
+    RentalsModel rentalOpt = rentalsRepository
+        .findById(id)
+        .orElseThrow(() -> new RentalsIdConflictException("Rental ID does not exist."));
 
-    if (rentalOpt.isEmpty()) {
-        return Optional.empty();
-    }
 
-    RentalsModel rental = rentalOpt.get();
+    RentalsModel rental = rentalOpt;
 
     if (rental.getReturnDate() != null) {
-        return Optional.empty(); 
+        throw new ReturnDateConflictException("Rental has already been returned."); 
     }
 
     LocalDate today = LocalDate.now();
@@ -76,9 +78,7 @@ public Optional<RentalsModel> updateRentals(Long id) {
         rental.setDelayFee(0);
     }
 
-    rentalsRepository.save(rental);
-
-    return Optional.of(rental);
+    return rentalsRepository.save(rental);
 }
 
 }

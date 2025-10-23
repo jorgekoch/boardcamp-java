@@ -5,6 +5,7 @@ import java.util.Optional;
 import org.springframework.stereotype.Service;
 
 import com.boardcamp.api.dtos.CustomersDTO;
+import com.boardcamp.api.exceptions.CustomersIdConflictException;
 import com.boardcamp.api.models.CustomersModel;
 import com.boardcamp.api.repositories.CustomersRepository;
 
@@ -27,7 +28,7 @@ public class CustomersService {
     public Optional<CustomersModel> postCustomers(CustomersDTO body) {
 
         if (customersRepository.existsByCpf(body.getCpf())) {
-            return Optional.empty();
+            throw new CustomersIdConflictException("Customer with this CPF already exists");
         }
 
         CustomersModel customer = new CustomersModel(body);

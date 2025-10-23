@@ -43,19 +43,19 @@ public class RentalsController {
     }  
 
     @PostMapping("/{id}/return")
-    public ResponseEntity<Object> updateRentals(@PathVariable("id") Long id) {
-        Optional<RentalsModel> rental = rentalsService.updateRentals(id);
-        if (!rental.isPresent()) {
-            return ResponseEntity.status(404).body("Item not found");
-        } else {
-            return ResponseEntity.status(200).body(rental.get());
-        }
+    public ResponseEntity<RentalsModel> updateRentals(@PathVariable("id") Long id) {
+        RentalsModel rental = rentalsService.updateRentals(id);
+        // if (!rental.isPresent()) {
+        //     return ResponseEntity.status(404).body("Item not found");
+        // } 
+
+        return ResponseEntity.status(200).body(rental);
     }
 
 
     @PostMapping
     public ResponseEntity<Object> postRentals(@RequestBody @Valid RentalsDTO body) {
-        Optional<RentalsModel> rental = rentalsService.postRentals(body);
+        RentalsModel rental = rentalsService.postRentals(body);
         return ResponseEntity.status(201).body(rental);
     }
 

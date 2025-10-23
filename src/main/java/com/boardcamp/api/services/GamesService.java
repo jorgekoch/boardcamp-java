@@ -6,6 +6,7 @@ import java.util.Optional;
 import org.springframework.stereotype.Service;
 
 import com.boardcamp.api.dtos.GamesDTO;
+import com.boardcamp.api.exceptions.GamesIdConflictException;
 import com.boardcamp.api.models.GamesModel;
 import com.boardcamp.api.repositories.GamesRepository;
 
@@ -24,7 +25,7 @@ public class GamesService {
     public Optional<GamesModel> postGames(GamesDTO body) {
 
         if (gamesRepository.existsByName(body.getName())) {
-            return Optional.empty();
+            throw new GamesIdConflictException("Game with this name already exists");
         }
 
         GamesModel item = new GamesModel(body);
