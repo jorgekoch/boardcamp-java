@@ -32,13 +32,9 @@ public class GamesController {
     
     @PostMapping
     public ResponseEntity<Object> postGames(@RequestBody @Valid GamesDTO body) {
-        Optional<GamesModel> item = gamesService.postGames(body);
-
-        if (!item.isPresent()) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).body("Conflict: Item with this name already exists.");
-        }
+        GamesModel item = gamesService.postGames(body);
         
-        return ResponseEntity.status(HttpStatus.CREATED).body(item.get());
+        return ResponseEntity.status(HttpStatus.CREATED).body(item);
     }
 
 }

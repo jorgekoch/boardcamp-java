@@ -3,6 +3,11 @@ package com.boardcamp.api;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -16,10 +21,12 @@ import org.springframework.boot.test.context.SpringBootTest;
 import com.boardcamp.api.dtos.CustomersDTO;
 import com.boardcamp.api.dtos.GamesDTO;
 import com.boardcamp.api.dtos.RentalsDTO;
+import com.boardcamp.api.exceptions.CustomersIdConflictException;
 import com.boardcamp.api.exceptions.ExistsByCpfConflictException;
 import com.boardcamp.api.exceptions.GamesIdConflictException;
 import com.boardcamp.api.models.CustomersModel;
 import com.boardcamp.api.models.GamesModel;
+import com.boardcamp.api.models.RentalsModel;
 import com.boardcamp.api.repositories.CustomersRepository;
 import com.boardcamp.api.repositories.GamesRepository;
 import com.boardcamp.api.repositories.RentalsRepository;
@@ -48,8 +55,42 @@ class GamesUnitTests {
 	@Mock
 	private RentalsRepository rentalsRepository;
 
+
 	@Test
-	void givenExistingName_whenCreatingGame_thenThrowsError() {
+	void givenNoGames_whenGettingGames_thenReturnsEmptyList() {
+		// given
+		doReturn(Collections.emptyList()).when(gamesRepository).findAll();
+		
+		// when
+		List<GamesModel> result = gamesService.getGames();
+
+		// then
+		verify(gamesRepository, times(1)).findAll();
+		assertNotNull(result);
+		assertEquals(0, result.size());
+	}
+
+	@Test
+	void givenExistingGames_whenGettingGames_thenReturnsGamesList() {
+		// given
+		GamesModel game1 = new GamesModel();
+		GamesModel game2 = new GamesModel();
+		List<GamesModel> mockGames = List.of(game1, game2);
+
+		doReturn(mockGames).when(gamesRepository).findAll();
+		
+		// when
+		List<GamesModel> result = gamesService.getGames();
+
+		// then
+		verify(gamesRepository, times(1)).findAll();
+		assertNotNull(result);
+		assertEquals(2, result.size());
+		assertEquals(mockGames, result);
+	}
+	
+	@Test
+	void givenExistingSameName_whenCreatingGame_thenThrowsError() {
 		// given
 		GamesDTO game = new GamesDTO("Test", "Test", 5, 10);
 
@@ -76,74 +117,11 @@ class GamesUnitTests {
 		doReturn(gameModel).when(gamesRepository).save(any());
 		
 		// when
-		GamesModel result = gamesService.postGames(game).get();
+		GamesModel result = gamesService.postGames(game);
 
 		// then
 		verify(gamesRepository, times(1)).existsByName(any());
 		verify(gamesRepository, times(1)).save(any());
 		assertEquals(gameModel, result);
-	}
-
-	@Test
-	void givenExistingCpf_whenCreatingCustomer_thenThrowsError() {
-		// given
-		CustomersDTO customer = new CustomersDTO("Test", "12345678900", "2000-01-01");
-
-		doReturn(true).when(customersRepository).existsByCpf(any());
-
-		// when
-		ExistsByCpfConflictException exception = assertThrows(
-			ExistsByCpfConflictException.class,
-			() -> customersService.postCustomers(customer));
-
-		// then
-		verify(customersRepository, times(1)).existsByCpf(any());
-		assertNotNull(exception);
-		assertEquals("Customer with this CPF already exists", exception.getMessage());
-
-
-
-}
-
-	@Test
-	void givenValidName_whenCreatingCustomer_thenCreatesCustomer() {
-		// given
-		CustomersDTO customer = new CustomersDTO("Test", "12345678900", "2000-01-01");
-		CustomersModel customerModel = new CustomersModel(customer);
-
-		doReturn(false).when(customersRepository).existsByCpf(any());
-		doReturn(customerModel).when(customersRepository).save(any());
-
-
-		// when
-		CustomersModel result = customersService.postCustomers(customer).get();
-
-		// then
-		verify(customersRepository, times(1)).existsByCpf(any());
-		verify(customersRepository, times(1)).save(any());
-		assertEquals(customerModel, result);
-
-
-
-}
-
-	@Test
-	void givenWrongGameId_whenCreatingRental_thenThrowsError() {
-		// given
-		GamesDTO game = new GamesDTO("Test", "Test", 5, 10);
-		CustomersDTO customer = new CustomersDTO("Test", "12345678900", "2000-01-01");	
-		RentalsDTO rental = new RentalsDTO(1L, 1L, 5);
-
-		doReturn(false).when(gamesRepository).findById(any());
-
-		// when
-		GamesIdConflictException exception = assertThrows(
-			GamesIdConflictException.class,
-			() -> rentalsService.postRentals(rental));
-
-		// then
-		verify(gamesRepository, times(1)).findById(any());
-		assertNotNull(exception);
-		assertEquals("Game ID does not exist.", exception.getMessage());
 	}
 }

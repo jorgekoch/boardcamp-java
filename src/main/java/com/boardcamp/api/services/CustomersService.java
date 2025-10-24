@@ -1,5 +1,6 @@
 package com.boardcamp.api.services;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.stereotype.Service;
@@ -18,7 +19,7 @@ public class CustomersService {
         this.customersRepository = customersRepository;
     }
 
-    public Object getCustomers() {
+    public List<CustomersModel> getCustomers() {
         return customersRepository.findAll();
     }
 

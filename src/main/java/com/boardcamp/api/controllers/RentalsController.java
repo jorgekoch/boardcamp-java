@@ -1,8 +1,10 @@
 package com.boardcamp.api.controllers;
 
 import java.util.Optional;
+import java.time.LocalDate;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -12,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.boardcamp.api.dtos.RentalsDTO;
+import com.boardcamp.api.exceptions.RentalsIdConflictException;
 import com.boardcamp.api.models.RentalsModel;
 import com.boardcamp.api.services.RentalsService;
 
@@ -36,10 +39,11 @@ public class RentalsController {
         Optional<RentalsModel> rental = rentalsService.getRentalsById(id);
 
         if (!rental.isPresent()) {
-            return ResponseEntity.status(404).body("Item not found");
-        } else {
-            return ResponseEntity.status(200).body(rental.get());
+            throw new RentalsIdConflictException("Rental ID does not exist.");
         }
+            
+        return ResponseEntity.status(200).body(rental.get());
+    
     }  
 
     @PostMapping("/{id}/return")
@@ -59,4 +63,10 @@ public class RentalsController {
         return ResponseEntity.status(201).body(rental);
     }
 
+    @DeleteMapping("/{id}")
+    public ResponseEntity<RentalsModel> deleteRentals(@PathVariable("id") Long id) {
+        rentalsService.deleteRentals(id);
+        return ResponseEntity.status(204).build();
+        
+    }
 }

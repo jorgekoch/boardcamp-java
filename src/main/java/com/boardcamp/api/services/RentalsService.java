@@ -55,30 +55,38 @@ public class RentalsService {
         return rentalsRepository.save(rental);
     }
 
-public RentalsModel updateRentals(Long id) {
-    RentalsModel rentalOpt = rentalsRepository
-        .findById(id)
-        .orElseThrow(() -> new RentalsIdConflictException("Rental ID does not exist."));
+    public RentalsModel updateRentals(Long id) {
+        RentalsModel rental = rentalsRepository
+            .findById(id)
+            .orElseThrow(() -> new RentalsIdConflictException("Rental ID does not exist."));
 
 
-    RentalsModel rental = rentalOpt;
+        if (rental.getReturnDate() != null) {
+            throw new ReturnDateConflictException("Rental has already been returned."); 
+        }
 
-    if (rental.getReturnDate() != null) {
-        throw new ReturnDateConflictException("Rental has already been returned."); 
+        LocalDate today = LocalDate.now();
+        rental.setReturnDate(today);
+
+        LocalDate dueDate = rental.getRentDate().plusDays(rental.getDaysRented());
+        long delayDays = ChronoUnit.DAYS.between(dueDate, today);
+        if (delayDays > 0) {
+            rental.setDelayFee((int) delayDays * rental.getGame().getPricePerDay());
+        } else {
+            rental.setDelayFee(0);
+        }
+
+        return rentalsRepository.save(rental);
     }
 
-    LocalDate today = LocalDate.now();
-    rental.setReturnDate(today);
+    public void deleteRentals(Long id) {
+        RentalsModel rental = rentalsRepository.findById(id)
+            .orElseThrow(() -> new RentalsIdConflictException("Rental ID does not exist."));
 
-    LocalDate dueDate = rental.getRentDate().plusDays(rental.getDaysRented());
-    long delayDays = ChronoUnit.DAYS.between(dueDate, today);
-    if (delayDays > 0) {
-        rental.setDelayFee((int) delayDays * rental.getGame().getPricePerDay());
-    } else {
-        rental.setDelayFee(0);
+        if (rental.getReturnDate() == null) {
+            throw new ReturnDateConflictException("Rental has not been returned yet.");
+        }
+
+        rentalsRepository.deleteById(id);
     }
-
-    return rentalsRepository.save(rental);
-}
-
 }
