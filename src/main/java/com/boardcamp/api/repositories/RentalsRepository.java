@@ -7,5 +7,7 @@ import com.boardcamp.api.models.RentalsModel;
 
 @Repository
 public interface RentalsRepository extends JpaRepository<RentalsModel, Long> {
+
+    int countByGameIdAndReturnDateIsNull(Long id);
     
 }

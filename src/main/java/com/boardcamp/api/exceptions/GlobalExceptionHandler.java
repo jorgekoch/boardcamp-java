@@ -8,12 +8,12 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 public class GlobalExceptionHandler {
     @ExceptionHandler({GamesIdConflictException.class})
     public ResponseEntity<String> handleCustomersIdConflictException(CustomersIdConflictException exception) {
-        return ResponseEntity.status(409).body(exception.getMessage());
+        return ResponseEntity.status(404).body(exception.getMessage());
     }
 
     @ExceptionHandler({CustomersIdConflictException.class})
     public ResponseEntity<String> handleGamesIdConflictException(GamesIdConflictException exception) {
-        return ResponseEntity.status(409).body(exception.getMessage());
+        return ResponseEntity.status(404).body(exception.getMessage());
     }
 
     @ExceptionHandler({RentalsIdConflictException.class})
@@ -34,6 +34,11 @@ public class GlobalExceptionHandler {
     @ExceptionHandler({ExistsByNameConflictException.class})
     public ResponseEntity<String> handleExistsByNameConflictException(ExistsByNameConflictException exception) {
         return ResponseEntity.status(409).body(exception.getMessage());
+    }
+
+    @ExceptionHandler({NoGamesInStockConflictException.class})
+    public ResponseEntity<String> handleNoGamesInStockConflictException(NoGamesInStockConflictException exception) {
+        return ResponseEntity.status(422).body(exception.getMessage());
     }
 
 }

@@ -8,11 +8,14 @@ import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import com.boardcamp.api.dtos.RentalsDTO;
 import com.boardcamp.api.exceptions.CustomersIdConflictException;
 import com.boardcamp.api.exceptions.GamesIdConflictException;
+import com.boardcamp.api.exceptions.NoGamesInStockConflictException;
 import com.boardcamp.api.exceptions.RentalsIdConflictException;
 import com.boardcamp.api.exceptions.ReturnDateConflictException;
 import com.boardcamp.api.models.CustomersModel;
@@ -47,9 +50,15 @@ public class RentalsService {
         GamesModel game = gamesRepository
             .findById(body.getGameId())
             .orElseThrow(() -> new GamesIdConflictException("Game ID does not exist."));
+
         CustomersModel customer = customersRepository
             .findById(body.getCustomerId())
             .orElseThrow(() -> new CustomersIdConflictException("Customer ID does not exist."));
+            
+        int rentalsInProgress = rentalsRepository.countByGameIdAndReturnDateIsNull(game.getId());
+        if (rentalsInProgress >= game.getStockTotal()) {
+            throw new NoGamesInStockConflictException("No games available for rent.");
+        }
 
         RentalsModel rental = new RentalsModel(body, game, customer);
         return rentalsRepository.save(rental);
